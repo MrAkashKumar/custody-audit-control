@@ -1,0 +1,5214 @@
+{
+  "info": {
+    "_postman_id": "2465eaa9-5401-4fc0-a49f-e74c5f4f2f81",
+    "name": "Custody Audit Control — Complete API, Audit and Error Collection",
+    "description": "Canonical collection generated from scripts/generate-postman.js. Covers every controller/security endpoint, with headers, request bodies, query parameters, path variables, chaining scripts, tests and saved response examples. Run folders 01-08 in order with the matching environment and cookie jar enabled. Folder 09 is a response-contract catalogue; its 500 item is documentation-only.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "csrfHeader",
+      "value": "X-CSRF-TOKEN"
+    },
+    {
+      "key": "csrfToken",
+      "value": ""
+    },
+    {
+      "key": "businessKey",
+      "value": ""
+    },
+    {
+      "key": "changeRequestId",
+      "value": ""
+    },
+    {
+      "key": "recordId",
+      "value": ""
+    },
+    {
+      "key": "recordVersion",
+      "value": "0"
+    },
+    {
+      "key": "editChangeId",
+      "value": ""
+    },
+    {
+      "key": "statusChangeId",
+      "value": ""
+    },
+    {
+      "key": "adminGroupId",
+      "value": ""
+    },
+    {
+      "key": "adminChangeId",
+      "value": ""
+    },
+    {
+      "key": "auditId",
+      "value": ""
+    },
+    {
+      "key": "reportId",
+      "value": ""
+    },
+    {
+      "key": "scheduleId",
+      "value": ""
+    },
+    {
+      "key": "lastTraceId",
+      "value": ""
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const traceId = pm.response.headers.get(\"X-Correlation-ID\");",
+          "pm.test(\"Trusted correlation ID header\", () => pm.expect(traceId).to.match(/^[0-9a-f]{32}$/));",
+          "if (traceId) { pm.collectionVariables.set(\"lastTraceId\", traceId); console.log(\"Audit traceId:\", traceId); }"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "01 — Security and session controller",
+      "item": [
+        {
+          "name": "Get CSRF token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/csrf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "csrf"
+              ]
+            },
+            "description": "Public CSRF bootstrap endpoint. Stores the dynamic header name and token for all state-changing requests."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set(\"csrfHeader\", body.headerName);",
+                  "pm.collectionVariables.set(\"csrfToken\", body.token);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/csrf",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "csrf"
+                  ]
+                },
+                "description": "Public CSRF bootstrap endpoint. Stores the dynamic header name and token for all state-changing requests."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"headerName\": \"X-CSRF-TOKEN\",\n  \"token\": \"example-token\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login as maker",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{makerUsername}}",
+                  "description": "Demo user identifier",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{demoPassword}}",
+                  "description": "Secret environment value",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
+            },
+            "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Authentication response\", () => pm.expect(pm.response.json().authenticated).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/x-www-form-urlencoded",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "username",
+                      "value": "{{makerUsername}}",
+                      "description": "Demo user identifier",
+                      "type": "text"
+                    },
+                    {
+                      "key": "password",
+                      "value": "{{demoPassword}}",
+                      "description": "Secret environment value",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "login"
+                  ]
+                },
+                "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"authenticated\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get authenticated session",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/session",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "session"
+              ]
+            },
+            "description": "Returns the current user, active group memberships and effective grants."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Maker session\", () => pm.expect(pm.response.json().user).to.eql(pm.environment.get(\"makerUsername\")));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/session",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "session"
+                  ]
+                },
+                "description": "Returns the current user, active group memberships and effective grants."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"user\": \"maker\",\n  \"name\": \"Maya Tan\",\n  \"groups\": [\n    {\n      \"id\": \"bullion\",\n      \"name\": \"Bullion Clearing\",\n      \"active\": true\n    }\n  ],\n  \"grants\": [\n    {\n      \"id\": \"grant-id\",\n      \"groupId\": \"bullion\",\n      \"feature\": \"*\",\n      \"action\": \"VIEW\",\n      \"scope\": \"BULLION\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "List accessible feature definitions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/features",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "features"
+              ]
+            },
+            "description": "Returns feature metadata and required field definitions visible to the authenticated actor."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Feature array\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/features",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "features"
+                  ]
+                },
+                "description": "Returns feature metadata and required field definitions visible to the authenticated actor."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"key\": \"vault\",\n    \"label\": \"Vault\",\n    \"fields\": [\n      {\n        \"key\": \"name\",\n        \"label\": \"Vault name\",\n        \"type\": \"text\",\n        \"required\": true\n      },\n      {\n        \"key\": \"location\",\n        \"label\": \"Location\",\n        \"type\": \"text\",\n        \"required\": true\n      },\n      {\n        \"key\": \"operator\",\n        \"label\": \"Operator\",\n        \"type\": \"text\",\n        \"required\": true\n      }\n    ]\n  }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 — Maker workflow controller",
+      "item": [
+        {
+          "name": "List records by feature",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "features",
+                ":feature",
+                "records"
+              ],
+              "variable": [
+                {
+                  "key": "feature",
+                  "value": "{{feature}}",
+                  "description": "Registered feature key, for example vault or holiday-calendar"
+                }
+              ]
+            },
+            "description": "Path variable: feature. Lists records the actor may view for that feature."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Record array\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "features",
+                    ":feature",
+                    "records"
+                  ],
+                  "variable": [
+                    {
+                      "key": "feature",
+                      "value": "{{feature}}",
+                      "description": "Registered feature key, for example vault or holiday-calendar"
+                    }
+                  ]
+                },
+                "description": "Path variable: feature. Lists records the actor may view for that feature."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": \"b1b2c3d4e5f647889900aabbccddeeff\",\n    \"feature\": \"vault\",\n    \"scope\": \"BULLION\",\n    \"businessKey\": \"POSTMAN-EXAMPLE\",\n    \"values\": {\n      \"name\": \"Postman Enterprise Vault\",\n      \"location\": \"Singapore\",\n      \"operator\": \"Custody Operations\"\n    },\n    \"status\": \"ACTIVE\",\n    \"version\": 0,\n    \"updatedAt\": \"2026-09-10T06:51:00Z\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Create record proposal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessKey\": \"{{businessKey}}\",\n  \"scope\": \"{{scope}}\",\n  \"values\": {\n    \"name\": \"Postman Enterprise Vault\",\n    \"location\": \"Singapore\",\n    \"operator\": \"Custody Operations\"\n  },\n  \"reason\": \"Postman complete API example\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "features",
+                ":feature",
+                "records"
+              ],
+              "variable": [
+                {
+                  "key": "feature",
+                  "value": "{{feature}}",
+                  "description": "Registered feature key"
+                }
+              ]
+            },
+            "description": "Path variable: feature. Full CreateSetupRequest body. Returns 202 because maker input remains pending until independent approval."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"businessKey\", `POSTMAN-${Date.now()}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 202\", () => pm.response.to.have.status(202));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set(\"changeRequestId\", body.id);",
+                  "pm.test(\"Pending ADD proposal\", () => { pm.expect(body.action).to.eql(\"ADD\"); pm.expect(body.status).to.eql(\"PENDING\"); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "202 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"businessKey\": \"{{businessKey}}\",\n  \"scope\": \"{{scope}}\",\n  \"values\": {\n    \"name\": \"Postman Enterprise Vault\",\n    \"location\": \"Singapore\",\n    \"operator\": \"Custody Operations\"\n  },\n  \"reason\": \"Postman complete API example\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "features",
+                    ":feature",
+                    "records"
+                  ],
+                  "variable": [
+                    {
+                      "key": "feature",
+                      "value": "{{feature}}",
+                      "description": "Registered feature key"
+                    }
+                  ]
+                },
+                "description": "Path variable: feature. Full CreateSetupRequest body. Returns 202 because maker input remains pending until independent approval."
+              },
+              "status": "Accepted",
+              "code": 202,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": \"a1b2c3d4e5f647889900aabbccddeeff\",\n  \"feature\": \"vault\",\n  \"scope\": \"BULLION\",\n  \"businessKey\": \"POSTMAN-EXAMPLE\",\n  \"recordId\": null,\n  \"action\": \"ADD\",\n  \"status\": \"PENDING\",\n  \"before\": {},\n  \"proposed\": {\n    \"name\": \"Postman Enterprise Vault\",\n    \"location\": \"Singapore\",\n    \"operator\": \"Custody Operations\"\n  },\n  \"maker\": \"maker\",\n  \"checker\": null,\n  \"reason\": \"Postman complete API example\",\n  \"decisionReason\": null,\n  \"submittedAt\": \"2026-09-10T06:50:00Z\",\n  \"decidedAt\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "List pending changes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/changes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "changes"
+              ]
+            },
+            "description": "Returns pending requests visible to the actor. No request parameters."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Change array\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/changes",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "changes"
+                  ]
+                },
+                "description": "Returns pending requests visible to the actor. No request parameters."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": \"a1b2c3d4e5f647889900aabbccddeeff\",\n    \"feature\": \"vault\",\n    \"scope\": \"BULLION\",\n    \"businessKey\": \"POSTMAN-EXAMPLE\",\n    \"recordId\": null,\n    \"action\": \"ADD\",\n    \"status\": \"PENDING\",\n    \"before\": {},\n    \"proposed\": {\n      \"name\": \"Postman Enterprise Vault\",\n      \"location\": \"Singapore\",\n      \"operator\": \"Custody Operations\"\n    },\n    \"maker\": \"maker\",\n    \"checker\": null,\n    \"reason\": \"Postman complete API example\",\n    \"decisionReason\": null,\n    \"submittedAt\": \"2026-09-10T06:50:00Z\",\n    \"decidedAt\": null\n  }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 — Checker approval and record updates",
+      "item": [
+        {
+          "name": "Login as checker",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{checkerUsername}}",
+                  "description": "Demo user identifier",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{demoPassword}}",
+                  "description": "Secret environment value",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
+            },
+            "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Authentication response\", () => pm.expect(pm.response.json().authenticated).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/x-www-form-urlencoded",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "username",
+                      "value": "{{checkerUsername}}",
+                      "description": "Demo user identifier",
+                      "type": "text"
+                    },
+                    {
+                      "key": "password",
+                      "value": "{{demoPassword}}",
+                      "description": "Secret environment value",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "login"
+                  ]
+                },
+                "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"authenticated\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Approve create proposal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approve\": true,\n  \"reason\": \"Independent checker approval\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/changes/:id/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "changes",
+                ":id",
+                "decision"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{changeRequestId}}",
+                  "description": "Change request ID returned by create/edit/status/import"
+                }
+              ]
+            },
+            "description": "Path variable: id. Full ApprovalDecisionRequest body. Maker and checker must be different users."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set(\"recordId\", body.recordId);",
+                  "pm.test(\"Approved\", () => pm.expect(body.status).to.eql(\"APPROVED\"));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"approve\": true,\n  \"reason\": \"Independent checker approval\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/changes/:id/decision",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "changes",
+                    ":id",
+                    "decision"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{changeRequestId}}",
+                      "description": "Change request ID returned by create/edit/status/import"
+                    }
+                  ]
+                },
+                "description": "Path variable: id. Full ApprovalDecisionRequest body. Maker and checker must be different users."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": \"a1b2c3d4e5f647889900aabbccddeeff\",\n  \"feature\": \"vault\",\n  \"scope\": \"BULLION\",\n  \"businessKey\": \"POSTMAN-EXAMPLE\",\n  \"recordId\": \"b1b2c3d4e5f647889900aabbccddeeff\",\n  \"action\": \"ADD\",\n  \"status\": \"APPROVED\",\n  \"before\": {},\n  \"proposed\": {\n    \"name\": \"Postman Enterprise Vault\",\n    \"location\": \"Singapore\",\n    \"operator\": \"Custody Operations\"\n  },\n  \"maker\": \"maker\",\n  \"checker\": \"checker\",\n  \"reason\": \"Postman complete API example\",\n  \"decisionReason\": \"Independent checker approval\",\n  \"submittedAt\": \"2026-09-10T06:50:00Z\",\n  \"decidedAt\": \"2026-09-10T06:51:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Switch back to maker",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{makerUsername}}",
+                  "description": "Demo user identifier",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{demoPassword}}",
+                  "description": "Secret environment value",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
+            },
+            "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Authentication response\", () => pm.expect(pm.response.json().authenticated).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/x-www-form-urlencoded",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "username",
+                      "value": "{{makerUsername}}",
+                      "description": "Demo user identifier",
+                      "type": "text"
+                    },
+                    {
+                      "key": "password",
+                      "value": "{{demoPassword}}",
+                      "description": "Secret environment value",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "login"
+                  ]
+                },
+                "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"authenticated\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Refresh records and capture version",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "features",
+                ":feature",
+                "records"
+              ],
+              "variable": [
+                {
+                  "key": "feature",
+                  "value": "{{feature}}",
+                  "description": "Registered feature key"
+                }
+              ]
+            },
+            "description": "Finds the newly approved business key and stores its record ID and optimistic-lock version."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const row = pm.response.json().find(item => item.businessKey === pm.collectionVariables.get(\"businessKey\"));",
+                  "pm.test(\"Approved record exists\", () => pm.expect(row).to.be.an(\"object\"));",
+                  "if (row) { pm.collectionVariables.set(\"recordId\", row.id); pm.collectionVariables.set(\"recordVersion\", String(row.version)); }"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "features",
+                    ":feature",
+                    "records"
+                  ],
+                  "variable": [
+                    {
+                      "key": "feature",
+                      "value": "{{feature}}",
+                      "description": "Registered feature key"
+                    }
+                  ]
+                },
+                "description": "Finds the newly approved business key and stores its record ID and optimistic-lock version."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": \"b1b2c3d4e5f647889900aabbccddeeff\",\n    \"feature\": \"vault\",\n    \"scope\": \"BULLION\",\n    \"businessKey\": \"POSTMAN-EXAMPLE\",\n    \"values\": {\n      \"name\": \"Postman Enterprise Vault\",\n      \"location\": \"Singapore\",\n      \"operator\": \"Custody Operations\"\n    },\n    \"status\": \"ACTIVE\",\n    \"version\": 0,\n    \"updatedAt\": \"2026-09-10T06:51:00Z\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Propose record edit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"version\": {{recordVersion}},\n  \"values\": {\n    \"name\": \"Postman Enterprise Vault Updated\",\n    \"location\": \"Singapore\",\n    \"operator\": \"Custody Operations\"\n  },\n  \"reason\": \"Demonstrate optimistic versioned edit\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/records/:id/edit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "records",
+                ":id",
+                "edit"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{recordId}}",
+                  "description": "Existing setup record ID"
+                }
+              ]
+            },
+            "description": "Path variable: id. Full UpdateSetupRequest body; version is the current server version."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"editChangeId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"version\": {{recordVersion}},\n  \"values\": {\n    \"name\": \"Postman Enterprise Vault Updated\",\n    \"location\": \"Singapore\",\n    \"operator\": \"Custody Operations\"\n  },\n  \"reason\": \"Demonstrate optimistic versioned edit\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/records/:id/edit",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "records",
+                    ":id",
+                    "edit"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{recordId}}",
+                      "description": "Existing setup record ID"
+                    }
+                  ]
+                },
+                "description": "Path variable: id. Full UpdateSetupRequest body; version is the current server version."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": \"edit-change-id\",\n  \"feature\": \"vault\",\n  \"scope\": \"BULLION\",\n  \"businessKey\": \"POSTMAN-EXAMPLE\",\n  \"recordId\": \"b1b2c3d4e5f647889900aabbccddeeff\",\n  \"action\": \"EDIT\",\n  \"status\": \"PENDING\",\n  \"before\": {\n    \"name\": \"Postman Enterprise Vault\",\n    \"location\": \"Singapore\",\n    \"operator\": \"Custody Operations\"\n  },\n  \"proposed\": {\n    \"name\": \"Postman Enterprise Vault Updated\",\n    \"location\": \"Singapore\",\n    \"operator\": \"Custody Operations\"\n  },\n  \"maker\": \"maker\",\n  \"checker\": null,\n  \"reason\": \"Postman complete API example\",\n  \"decisionReason\": null,\n  \"submittedAt\": \"2026-09-10T06:50:00Z\",\n  \"decidedAt\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login as checker for edit approval",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{checkerUsername}}",
+                  "description": "Demo user identifier",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{demoPassword}}",
+                  "description": "Secret environment value",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
+            },
+            "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Authentication response\", () => pm.expect(pm.response.json().authenticated).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/x-www-form-urlencoded",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "username",
+                      "value": "{{checkerUsername}}",
+                      "description": "Demo user identifier",
+                      "type": "text"
+                    },
+                    {
+                      "key": "password",
+                      "value": "{{demoPassword}}",
+                      "description": "Secret environment value",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "login"
+                  ]
+                },
+                "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"authenticated\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Approve edit proposal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approve\": true,\n  \"reason\": \"Edit checked independently\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/changes/:id/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "changes",
+                ":id",
+                "decision"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{editChangeId}}",
+                  "description": "Edit change request ID"
+                }
+              ]
+            },
+            "description": "Approves the edit and atomically records its domain audit evidence."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"approve\": true,\n  \"reason\": \"Edit checked independently\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/changes/:id/decision",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "changes",
+                    ":id",
+                    "decision"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{editChangeId}}",
+                      "description": "Edit change request ID"
+                    }
+                  ]
+                },
+                "description": "Approves the edit and atomically records its domain audit evidence."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": \"edit-change-id\",\n  \"feature\": \"vault\",\n  \"scope\": \"BULLION\",\n  \"businessKey\": \"POSTMAN-EXAMPLE\",\n  \"recordId\": \"b1b2c3d4e5f647889900aabbccddeeff\",\n  \"action\": \"EDIT\",\n  \"status\": \"APPROVED\",\n  \"before\": {},\n  \"proposed\": {\n    \"name\": \"Postman Enterprise Vault\",\n    \"location\": \"Singapore\",\n    \"operator\": \"Custody Operations\"\n  },\n  \"maker\": \"maker\",\n  \"checker\": \"checker\",\n  \"reason\": \"Postman complete API example\",\n  \"decisionReason\": null,\n  \"submittedAt\": \"2026-09-10T06:50:00Z\",\n  \"decidedAt\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login as maker for status change",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{makerUsername}}",
+                  "description": "Demo user identifier",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{demoPassword}}",
+                  "description": "Secret environment value",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
+            },
+            "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Authentication response\", () => pm.expect(pm.response.json().authenticated).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/x-www-form-urlencoded",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "username",
+                      "value": "{{makerUsername}}",
+                      "description": "Demo user identifier",
+                      "type": "text"
+                    },
+                    {
+                      "key": "password",
+                      "value": "{{demoPassword}}",
+                      "description": "Secret environment value",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "login"
+                  ]
+                },
+                "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"authenticated\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Refresh version after edit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "features",
+                ":feature",
+                "records"
+              ],
+              "variable": [
+                {
+                  "key": "feature",
+                  "value": "{{feature}}",
+                  "description": "Registered feature key"
+                }
+              ]
+            },
+            "description": "Refreshes the optimistic version before the status proposal."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const row = pm.response.json().find(item => item.id === pm.collectionVariables.get(\"recordId\"));",
+                  "pm.test(\"Record available\", () => pm.expect(row).to.be.an(\"object\"));",
+                  "if (row) pm.collectionVariables.set(\"recordVersion\", String(row.version));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "features",
+                    ":feature",
+                    "records"
+                  ],
+                  "variable": [
+                    {
+                      "key": "feature",
+                      "value": "{{feature}}",
+                      "description": "Registered feature key"
+                    }
+                  ]
+                },
+                "description": "Refreshes the optimistic version before the status proposal."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": \"b1b2c3d4e5f647889900aabbccddeeff\",\n    \"feature\": \"vault\",\n    \"scope\": \"BULLION\",\n    \"businessKey\": \"POSTMAN-EXAMPLE\",\n    \"values\": {\n      \"name\": \"Postman Enterprise Vault Updated\",\n      \"location\": \"Singapore\",\n      \"operator\": \"Custody Operations\"\n    },\n    \"status\": \"ACTIVE\",\n    \"version\": 1,\n    \"updatedAt\": \"2026-09-10T06:51:00Z\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Propose record status change",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"version\": {{recordVersion}},\n  \"status\": \"INACTIVE\",\n  \"reason\": \"Controlled operational status change\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/records/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "records",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{recordId}}",
+                  "description": "Existing setup record ID"
+                }
+              ]
+            },
+            "description": "Path variable: id. Full ChangeSetupStatusRequest body. Allowed status values: ACTIVE, INACTIVE."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"statusChangeId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"version\": {{recordVersion}},\n  \"status\": \"INACTIVE\",\n  \"reason\": \"Controlled operational status change\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/records/:id/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "records",
+                    ":id",
+                    "status"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{recordId}}",
+                      "description": "Existing setup record ID"
+                    }
+                  ]
+                },
+                "description": "Path variable: id. Full ChangeSetupStatusRequest body. Allowed status values: ACTIVE, INACTIVE."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": \"status-change-id\",\n  \"feature\": \"vault\",\n  \"scope\": \"BULLION\",\n  \"businessKey\": \"POSTMAN-EXAMPLE\",\n  \"recordId\": \"b1b2c3d4e5f647889900aabbccddeeff\",\n  \"action\": \"DEACTIVATE\",\n  \"status\": \"PENDING\",\n  \"before\": {},\n  \"proposed\": {\n    \"name\": \"Postman Enterprise Vault\",\n    \"location\": \"Singapore\",\n    \"operator\": \"Custody Operations\"\n  },\n  \"maker\": \"maker\",\n  \"checker\": null,\n  \"reason\": \"Postman complete API example\",\n  \"decisionReason\": null,\n  \"submittedAt\": \"2026-09-10T06:50:00Z\",\n  \"decidedAt\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login as checker for status approval",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{checkerUsername}}",
+                  "description": "Demo user identifier",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{demoPassword}}",
+                  "description": "Secret environment value",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
+            },
+            "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Authentication response\", () => pm.expect(pm.response.json().authenticated).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/x-www-form-urlencoded",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "username",
+                      "value": "{{checkerUsername}}",
+                      "description": "Demo user identifier",
+                      "type": "text"
+                    },
+                    {
+                      "key": "password",
+                      "value": "{{demoPassword}}",
+                      "description": "Secret environment value",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "login"
+                  ]
+                },
+                "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"authenticated\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Approve status proposal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approve\": true,\n  \"reason\": \"Status change checked independently\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/changes/:id/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "changes",
+                ":id",
+                "decision"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{statusChangeId}}",
+                  "description": "Status change request ID"
+                }
+              ]
+            },
+            "description": "Applies the approved status transition and captures checker evidence."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"approve\": true,\n  \"reason\": \"Status change checked independently\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/changes/:id/decision",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "changes",
+                    ":id",
+                    "decision"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{statusChangeId}}",
+                      "description": "Status change request ID"
+                    }
+                  ]
+                },
+                "description": "Applies the approved status transition and captures checker evidence."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": \"status-change-id\",\n  \"feature\": \"vault\",\n  \"scope\": \"BULLION\",\n  \"businessKey\": \"POSTMAN-EXAMPLE\",\n  \"recordId\": \"b1b2c3d4e5f647889900aabbccddeeff\",\n  \"action\": \"DEACTIVATE\",\n  \"status\": \"APPROVED\",\n  \"before\": {},\n  \"proposed\": {\n    \"name\": \"Postman Enterprise Vault\",\n    \"location\": \"Singapore\",\n    \"operator\": \"Custody Operations\"\n  },\n  \"maker\": \"maker\",\n  \"checker\": \"checker\",\n  \"reason\": \"Postman complete API example\",\n  \"decisionReason\": null,\n  \"submittedAt\": \"2026-09-10T06:50:00Z\",\n  \"decidedAt\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 — Administration controller",
+      "item": [
+        {
+          "name": "Login as maker administrator",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{makerUsername}}",
+                  "description": "Demo user identifier",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{demoPassword}}",
+                  "description": "Secret environment value",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
+            },
+            "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Authentication response\", () => pm.expect(pm.response.json().authenticated).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/x-www-form-urlencoded",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "username",
+                      "value": "{{makerUsername}}",
+                      "description": "Demo user identifier",
+                      "type": "text"
+                    },
+                    {
+                      "key": "password",
+                      "value": "{{demoPassword}}",
+                      "description": "Secret environment value",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "login"
+                  ]
+                },
+                "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"authenticated\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get administration directory",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration"
+              ]
+            },
+            "description": "Returns users, groups, grants and security changes visible to an administrator."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/administration",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "administration"
+                  ]
+                },
+                "description": "Returns users, groups, grants and security changes visible to an administrator."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"users\": [\n    {\n      \"id\": \"maker\",\n      \"name\": \"Maya Tan\",\n      \"active\": true,\n      \"groups\": [\n        \"bullion\",\n        \"csa\"\n      ]\n    }\n  ],\n  \"groups\": [\n    {\n      \"id\": \"csa\",\n      \"name\": \"R2WD_GTO_ISTOA_CSA\",\n      \"active\": true\n    }\n  ],\n  \"grants\": [\n    {\n      \"id\": \"grant-id\",\n      \"groupId\": \"csa\",\n      \"feature\": \"administration\",\n      \"action\": \"ADMIN\",\n      \"scope\": \"SYSTEM\"\n    }\n  ],\n  \"changes\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "Propose administration change",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kind\": \"GROUP\",\n  \"values\": {\n    \"groupId\": \"{{adminGroupId}}\",\n    \"name\": \"Postman Audit Reviewers\",\n    \"active\": \"true\"\n  },\n  \"reason\": \"Demonstrate administration maker-checker\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/changes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "changes"
+              ]
+            },
+            "description": "Full SecurityChangeRequest body. kind supports GROUP, MEMBERSHIP and GRANT, each with its own values schema."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"adminGroupId\", `postman-group-${Date.now()}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"adminChangeId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"kind\": \"GROUP\",\n  \"values\": {\n    \"groupId\": \"{{adminGroupId}}\",\n    \"name\": \"Postman Audit Reviewers\",\n    \"active\": \"true\"\n  },\n  \"reason\": \"Demonstrate administration maker-checker\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/administration/changes",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "administration",
+                    "changes"
+                  ]
+                },
+                "description": "Full SecurityChangeRequest body. kind supports GROUP, MEMBERSHIP and GRANT, each with its own values schema."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": \"admin-change-id\",\n  \"kind\": \"GROUP\",\n  \"values\": {\n    \"groupId\": \"postman-group\",\n    \"name\": \"Postman Audit Reviewers\",\n    \"active\": \"true\"\n  },\n  \"maker\": \"maker\",\n  \"checker\": null,\n  \"reason\": \"Demonstrate administration maker-checker\",\n  \"status\": \"PENDING\",\n  \"submittedAt\": \"2026-09-10T06:53:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login as checker administrator",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{checkerUsername}}",
+                  "description": "Demo user identifier",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{demoPassword}}",
+                  "description": "Secret environment value",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
+            },
+            "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Authentication response\", () => pm.expect(pm.response.json().authenticated).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/x-www-form-urlencoded",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "username",
+                      "value": "{{checkerUsername}}",
+                      "description": "Demo user identifier",
+                      "type": "text"
+                    },
+                    {
+                      "key": "password",
+                      "value": "{{demoPassword}}",
+                      "description": "Secret environment value",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "login"
+                  ]
+                },
+                "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"authenticated\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Approve administration change",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approve\": true,\n  \"reason\": \"Security change independently approved\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/changes/:id/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "changes",
+                ":id",
+                "decision"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{adminChangeId}}",
+                  "description": "Security change ID"
+                }
+              ]
+            },
+            "description": "Path variable: id. Uses the common ApprovalDecisionRequest body."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"approve\": true,\n  \"reason\": \"Security change independently approved\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/administration/changes/:id/decision",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "administration",
+                    "changes",
+                    ":id",
+                    "decision"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{adminChangeId}}",
+                      "description": "Security change ID"
+                    }
+                  ]
+                },
+                "description": "Path variable: id. Uses the common ApprovalDecisionRequest body."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": \"admin-change-id\",\n  \"kind\": \"GROUP\",\n  \"values\": {\n    \"groupId\": \"postman-group\",\n    \"name\": \"Postman Audit Reviewers\",\n    \"active\": \"true\"\n  },\n  \"maker\": \"maker\",\n  \"checker\": \"checker\",\n  \"reason\": \"Demonstrate administration maker-checker\",\n  \"status\": \"APPROVED\",\n  \"submittedAt\": \"2026-09-10T06:53:00Z\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 — Import controller",
+      "item": [
+        {
+          "name": "Login as maker for import",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{makerUsername}}",
+                  "description": "Demo user identifier",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{demoPassword}}",
+                  "description": "Secret environment value",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
+            },
+            "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Authentication response\", () => pm.expect(pm.response.json().authenticated).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/x-www-form-urlencoded",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "username",
+                      "value": "{{makerUsername}}",
+                      "description": "Demo user identifier",
+                      "type": "text"
+                    },
+                    {
+                      "key": "password",
+                      "value": "{{demoPassword}}",
+                      "description": "Secret environment value",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "login"
+                  ]
+                },
+                "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"authenticated\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Import feature records from CSV",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "docs/vault-import.csv",
+                  "description": "UTF-8 CSV, maximum 2 MB and 100 rows"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/features/:feature/import?scope={{scope}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "features",
+                ":feature",
+                "import"
+              ],
+              "query": [
+                {
+                  "key": "scope",
+                  "value": "{{scope}}",
+                  "description": "Authorised scope applied to every imported row",
+                  "disabled": false
+                }
+              ],
+              "variable": [
+                {
+                  "key": "feature",
+                  "value": "{{feature}}",
+                  "description": "Feature whose CSV header must match its field definition"
+                }
+              ]
+            },
+            "description": "Path variable: feature; query parameter: scope; multipart part: file. In Postman, reselect docs/vault-import.csv if local file access is not retained after import."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "docs/vault-import.csv",
+                      "description": "UTF-8 CSV, maximum 2 MB and 100 rows"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/features/:feature/import?scope={{scope}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "features",
+                    ":feature",
+                    "import"
+                  ],
+                  "query": [
+                    {
+                      "key": "scope",
+                      "value": "{{scope}}",
+                      "description": "Authorised scope applied to every imported row",
+                      "disabled": false
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "feature",
+                      "value": "{{feature}}",
+                      "description": "Feature whose CSV header must match its field definition"
+                    }
+                  ]
+                },
+                "description": "Path variable: feature; query parameter: scope; multipart part: file. In Postman, reselect docs/vault-import.csv if local file access is not retained after import."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"batchId\": \"import-batch-id\",\n  \"submitted\": 1,\n  \"changeIds\": [\n    \"change-1\"\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 — Audit controller",
+      "item": [
+        {
+          "name": "Search audit events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit?page={{page}}&size={{pageSize}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "STATIC",
+                  "description": "Optional audit category",
+                  "disabled": true
+                },
+                {
+                  "key": "feature",
+                  "value": "{{feature}}",
+                  "description": "Optional feature key",
+                  "disabled": true
+                },
+                {
+                  "key": "record",
+                  "value": "{{recordId}}",
+                  "description": "Optional record ID or business reference",
+                  "disabled": true
+                },
+                {
+                  "key": "field",
+                  "value": "name",
+                  "description": "Optional changed field name",
+                  "disabled": true
+                },
+                {
+                  "key": "user",
+                  "value": "maker",
+                  "description": "Optional actor, maker or checker",
+                  "disabled": true
+                },
+                {
+                  "key": "action",
+                  "value": "ADD",
+                  "description": "Optional action",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "APPROVED",
+                  "description": "Optional status",
+                  "disabled": true
+                },
+                {
+                  "key": "reference",
+                  "value": "{{changeRequestId}}",
+                  "description": "Optional correlation/business reference",
+                  "disabled": true
+                },
+                {
+                  "key": "screen",
+                  "value": "Approval review",
+                  "description": "Optional source/screen",
+                  "disabled": true
+                },
+                {
+                  "key": "scope",
+                  "value": "{{scope}}",
+                  "description": "Optional authorised scope",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "2026-09-01",
+                  "description": "Optional inclusive ISO date",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-09-30",
+                  "description": "Optional inclusive ISO date",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "{{page}}",
+                  "description": "Zero-based page number",
+                  "disabled": false
+                },
+                {
+                  "key": "size",
+                  "value": "{{pageSize}}",
+                  "description": "Page size",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "All AuditSearchRequest query parameters are shown. Optional filters are disabled by default; enable only those required. page defaults to 0 and size to 25."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Paged response\", () => pm.expect(body.content).to.be.an(\"array\"));",
+                  "if (body.content.length) pm.collectionVariables.set(\"auditId\", body.content[0].id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/audit?page={{page}}&size={{pageSize}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "audit"
+                  ],
+                  "query": [
+                    {
+                      "key": "category",
+                      "value": "STATIC",
+                      "description": "Optional audit category",
+                      "disabled": true
+                    },
+                    {
+                      "key": "feature",
+                      "value": "{{feature}}",
+                      "description": "Optional feature key",
+                      "disabled": true
+                    },
+                    {
+                      "key": "record",
+                      "value": "{{recordId}}",
+                      "description": "Optional record ID or business reference",
+                      "disabled": true
+                    },
+                    {
+                      "key": "field",
+                      "value": "name",
+                      "description": "Optional changed field name",
+                      "disabled": true
+                    },
+                    {
+                      "key": "user",
+                      "value": "maker",
+                      "description": "Optional actor, maker or checker",
+                      "disabled": true
+                    },
+                    {
+                      "key": "action",
+                      "value": "ADD",
+                      "description": "Optional action",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "APPROVED",
+                      "description": "Optional status",
+                      "disabled": true
+                    },
+                    {
+                      "key": "reference",
+                      "value": "{{changeRequestId}}",
+                      "description": "Optional correlation/business reference",
+                      "disabled": true
+                    },
+                    {
+                      "key": "screen",
+                      "value": "Approval review",
+                      "description": "Optional source/screen",
+                      "disabled": true
+                    },
+                    {
+                      "key": "scope",
+                      "value": "{{scope}}",
+                      "description": "Optional authorised scope",
+                      "disabled": true
+                    },
+                    {
+                      "key": "from",
+                      "value": "2026-09-01",
+                      "description": "Optional inclusive ISO date",
+                      "disabled": true
+                    },
+                    {
+                      "key": "to",
+                      "value": "2026-09-30",
+                      "description": "Optional inclusive ISO date",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "{{page}}",
+                      "description": "Zero-based page number",
+                      "disabled": false
+                    },
+                    {
+                      "key": "size",
+                      "value": "{{pageSize}}",
+                      "description": "Page size",
+                      "disabled": false
+                    }
+                  ]
+                },
+                "description": "All AuditSearchRequest query parameters are shown. Optional filters are disabled by default; enable only those required. page defaults to 0 and size to 25."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"content\": [\n    {\n      \"id\": \"c1b2c3d4e5f647889900aabbccddeeff\",\n      \"schemaVersion\": 1,\n      \"eventType\": \"DOMAIN\",\n      \"category\": \"STATIC\",\n      \"feature\": \"vault\",\n      \"scope\": \"BULLION\",\n      \"recordId\": \"b1b2c3d4e5f647889900aabbccddeeff\",\n      \"reference\": \"a1b2c3d4e5f647889900aabbccddeeff\",\n      \"action\": \"ADD\",\n      \"status\": \"APPROVED\",\n      \"actor\": \"checker\",\n      \"maker\": \"maker\",\n      \"checker\": \"checker\",\n      \"reason\": \"Independent approval\",\n      \"source\": \"Approval review\",\n      \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\",\n      \"endpoint\": \"/api/v1/changes/{id}/decision\",\n      \"httpMethod\": \"POST\",\n      \"httpStatus\": 200,\n      \"outcome\": \"SUCCESS\",\n      \"errorCode\": null,\n      \"sourceIp\": \"127.0.0.1\",\n      \"userAgent\": \"PostmanRuntime\",\n      \"riskLevel\": \"LOW\",\n      \"durationMs\": 18,\n      \"metadata\": {},\n      \"occurredAt\": \"2026-09-10T06:51:00Z\",\n      \"before\": {},\n      \"proposed\": {\n        \"name\": \"Postman Enterprise Vault\",\n        \"location\": \"Singapore\",\n        \"operator\": \"Custody Operations\"\n      },\n      \"after\": {\n        \"name\": \"Postman Enterprise Vault\",\n        \"location\": \"Singapore\",\n        \"operator\": \"Custody Operations\",\n        \"operationalStatus\": \"ACTIVE\"\n      }\n    }\n  ],\n  \"totalElements\": 1,\n  \"number\": 0,\n  \"size\": 25\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get audit event detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "audit",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{auditId}}",
+                  "description": "Audit event ID returned by search"
+                }
+              ]
+            },
+            "description": "Path variable: id. Returns immutable evidence including endpoint, trace, actor and before/proposed/after snapshots."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/audit/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "audit",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{auditId}}",
+                      "description": "Audit event ID returned by search"
+                    }
+                  ]
+                },
+                "description": "Path variable: id. Returns immutable evidence including endpoint, trace, actor and before/proposed/after snapshots."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": \"c1b2c3d4e5f647889900aabbccddeeff\",\n  \"schemaVersion\": 1,\n  \"eventType\": \"DOMAIN\",\n  \"category\": \"STATIC\",\n  \"feature\": \"vault\",\n  \"scope\": \"BULLION\",\n  \"recordId\": \"b1b2c3d4e5f647889900aabbccddeeff\",\n  \"reference\": \"a1b2c3d4e5f647889900aabbccddeeff\",\n  \"action\": \"ADD\",\n  \"status\": \"APPROVED\",\n  \"actor\": \"checker\",\n  \"maker\": \"maker\",\n  \"checker\": \"checker\",\n  \"reason\": \"Independent approval\",\n  \"source\": \"Approval review\",\n  \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\",\n  \"endpoint\": \"/api/v1/changes/{id}/decision\",\n  \"httpMethod\": \"POST\",\n  \"httpStatus\": 200,\n  \"outcome\": \"SUCCESS\",\n  \"errorCode\": null,\n  \"sourceIp\": \"127.0.0.1\",\n  \"userAgent\": \"PostmanRuntime\",\n  \"riskLevel\": \"LOW\",\n  \"durationMs\": 18,\n  \"metadata\": {},\n  \"occurredAt\": \"2026-09-10T06:51:00Z\",\n  \"before\": {},\n  \"proposed\": {\n    \"name\": \"Postman Enterprise Vault\",\n    \"location\": \"Singapore\",\n    \"operator\": \"Custody Operations\"\n  },\n  \"after\": {\n    \"name\": \"Postman Enterprise Vault\",\n    \"location\": \"Singapore\",\n    \"operator\": \"Custody Operations\",\n    \"operationalStatus\": \"ACTIVE\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 — Report and schedule controller",
+      "item": [
+        {
+          "name": "Create audit report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"format\": \"CSV\",\n  \"filter\": {\n    \"category\": \"STATIC\",\n    \"feature\": \"vault\",\n    \"record\": null,\n    \"field\": null,\n    \"user\": null,\n    \"action\": null,\n    \"status\": null,\n    \"reference\": null,\n    \"screen\": null,\n    \"scope\": \"BULLION\",\n    \"from\": null,\n    \"to\": null\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports"
+              ]
+            },
+            "description": "Full GenerateReportRequest. format supports CSV or XLSX; filter uses every AuditSearchRequest field."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 202\", () => pm.response.to.have.status(202));",
+                  "pm.collectionVariables.set(\"reportId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "202 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"format\": \"CSV\",\n  \"filter\": {\n    \"category\": \"STATIC\",\n    \"feature\": \"vault\",\n    \"record\": null,\n    \"field\": null,\n    \"user\": null,\n    \"action\": null,\n    \"status\": null,\n    \"reference\": null,\n    \"screen\": null,\n    \"scope\": \"BULLION\",\n    \"from\": null,\n    \"to\": null\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/reports",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports"
+                  ]
+                },
+                "description": "Full GenerateReportRequest. format supports CSV or XLSX; filter uses every AuditSearchRequest field."
+              },
+              "status": "Accepted",
+              "code": 202,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": \"d1b2c3d4e5f647889900aabbccddeeff\",\n  \"owner\": \"maker\",\n  \"audienceGroup\": null,\n  \"trigger\": \"MANUAL\",\n  \"format\": \"CSV\",\n  \"status\": \"REQUESTED\",\n  \"rowCount\": 0,\n  \"requestedAt\": \"2026-09-10T06:52:00Z\",\n  \"expiresAt\": \"2026-09-17T06:52:00Z\",\n  \"failureCode\": null,\n  \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List report jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports"
+              ]
+            },
+            "description": "Lists report jobs the actor is permitted to download. The asynchronous worker changes REQUESTED to READY or FAILED."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const selected = pm.response.json().find(item => item.id === pm.collectionVariables.get(\"reportId\"));",
+                  "if (selected) console.log(\"Report status:\", selected.status);",
+                  "const attempt = Number(pm.collectionVariables.get(\"reportPollAttempt\") || 0);",
+                  "if (selected && [\"REQUESTED\", \"RUNNING\"].includes(selected.status) && attempt < 10) {",
+                  "  pm.collectionVariables.set(\"reportPollAttempt\", String(attempt + 1));",
+                  "  setTimeout(() => {}, 1000);",
+                  "  pm.execution.setNextRequest(\"List report jobs\");",
+                  "} else {",
+                  "  pm.collectionVariables.unset(\"reportPollAttempt\");",
+                  "  pm.test(\"Report is ready for download\", () => pm.expect(selected && selected.status).to.eql(\"READY\"));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/reports",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports"
+                  ]
+                },
+                "description": "Lists report jobs the actor is permitted to download. The asynchronous worker changes REQUESTED to READY or FAILED."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": \"d1b2c3d4e5f647889900aabbccddeeff\",\n    \"owner\": \"maker\",\n    \"audienceGroup\": null,\n    \"trigger\": \"MANUAL\",\n    \"format\": \"CSV\",\n    \"status\": \"READY\",\n    \"rowCount\": 12,\n    \"requestedAt\": \"2026-09-10T06:52:00Z\",\n    \"expiresAt\": \"2026-09-17T06:52:00Z\",\n    \"failureCode\": null,\n    \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Download generated report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/:id/download",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                ":id",
+                "download"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{reportId}}",
+                  "description": "Report job ID; job must be READY and unexpired"
+                }
+              ]
+            },
+            "description": "Path variable: id. Returns a no-store attachment. If the worker has not completed, retry after GET /reports reports READY."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/reports/:id/download",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "reports",
+                    ":id",
+                    "download"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{reportId}}",
+                      "description": "Report job ID; job must be READY and unexpired"
+                    }
+                  ]
+                },
+                "description": "Path variable: id. Returns a no-store attachment. If the worker has not completed, retry after GET /reports reports READY."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/csv;charset=UTF-8"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "id,eventType,category,feature,scope,action,status,actor,occurredAt\nexample,DOMAIN,STATIC,vault,BULLION,ADD,APPROVED,checker,2026-09-10T06:51:00Z\n"
+            }
+          ]
+        },
+        {
+          "name": "List report schedules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schedules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schedules"
+              ]
+            },
+            "description": "Lists schedules visible to the current actor."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/schedules",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "schedules"
+                  ]
+                },
+                "description": "Lists schedules visible to the current actor."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": \"e1b2c3d4e5f647889900aabbccddeeff\",\n    \"name\": \"Postman daily Vault audit\",\n    \"owner\": \"maker\",\n    \"audienceGroup\": \"csa\",\n    \"category\": \"STATIC\",\n    \"feature\": \"vault\",\n    \"scope\": \"BULLION\",\n    \"format\": \"CSV\",\n    \"enabled\": true,\n    \"intervalDays\": 1,\n    \"nextRunAt\": \"2026-09-11T06:52:00Z\",\n    \"lastFailure\": null\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Create report schedule",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman daily Vault audit\",\n  \"category\": \"STATIC\",\n  \"feature\": \"vault\",\n  \"scope\": \"BULLION\",\n  \"format\": \"CSV\",\n  \"intervalDays\": 1,\n  \"audienceGroup\": \"csa\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schedules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schedules"
+              ]
+            },
+            "description": "Full CreateScheduleRequest. intervalDays must be 1-365; format supports CSV or XLSX."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"scheduleId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Postman daily Vault audit\",\n  \"category\": \"STATIC\",\n  \"feature\": \"vault\",\n  \"scope\": \"BULLION\",\n  \"format\": \"CSV\",\n  \"intervalDays\": 1,\n  \"audienceGroup\": \"csa\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/schedules",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "schedules"
+                  ]
+                },
+                "description": "Full CreateScheduleRequest. intervalDays must be 1-365; format supports CSV or XLSX."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": \"e1b2c3d4e5f647889900aabbccddeeff\",\n  \"name\": \"Postman daily Vault audit\",\n  \"owner\": \"maker\",\n  \"audienceGroup\": \"csa\",\n  \"category\": \"STATIC\",\n  \"feature\": \"vault\",\n  \"scope\": \"BULLION\",\n  \"format\": \"CSV\",\n  \"enabled\": true,\n  \"intervalDays\": 1,\n  \"nextRunAt\": \"2026-09-11T06:52:00Z\",\n  \"lastFailure\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Toggle report schedule",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schedules/:id/toggle",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schedules",
+                ":id",
+                "toggle"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{scheduleId}}",
+                  "description": "Report schedule ID"
+                }
+              ]
+            },
+            "description": "Path variable: id. No request body. Toggles enabled and recalculates the next run when enabled."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/schedules/:id/toggle",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "schedules",
+                    ":id",
+                    "toggle"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{scheduleId}}",
+                      "description": "Report schedule ID"
+                    }
+                  ]
+                },
+                "description": "Path variable: id. No request body. Toggles enabled and recalculates the next run when enabled."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": \"e1b2c3d4e5f647889900aabbccddeeff\",\n  \"name\": \"Postman daily Vault audit\",\n  \"owner\": \"maker\",\n  \"audienceGroup\": \"csa\",\n  \"category\": \"STATIC\",\n  \"feature\": \"vault\",\n  \"scope\": \"BULLION\",\n  \"format\": \"CSV\",\n  \"enabled\": false,\n  \"intervalDays\": 1,\n  \"nextRunAt\": null,\n  \"lastFailure\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 — Common error responses",
+      "item": [
+        {
+          "name": "Malformed JSON — SYS-400-001",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessKey\": \"BROKEN\",",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "features",
+                ":feature",
+                "records"
+              ],
+              "variable": [
+                {
+                  "key": "feature",
+                  "value": "{{feature}}",
+                  "description": "Registered feature key"
+                }
+              ]
+            },
+            "description": "Framework JSON parsing failure."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"System validation code\", () => pm.expect(pm.response.json().code).to.eql(\"SYS-400-001\"));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 malformed JSON",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"businessKey\": \"BROKEN\",",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "features",
+                    ":feature",
+                    "records"
+                  ],
+                  "variable": [
+                    {
+                      "key": "feature",
+                      "value": "{{feature}}",
+                      "description": "Registered feature key"
+                    }
+                  ]
+                },
+                "description": "Framework JSON parsing failure."
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": 400,\n  \"code\": \"SYS-400-001\",\n  \"message\": \"Some input is invalid. Check the fields and date range, then try again.\",\n  \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\",\n  \"fieldErrors\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "DTO validation — SYS-400-001",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessKey\": \"\",\n  \"scope\": \"\",\n  \"values\": {},\n  \"reason\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "features",
+                ":feature",
+                "records"
+              ],
+              "variable": [
+                {
+                  "key": "feature",
+                  "value": "{{feature}}",
+                  "description": "Registered feature key"
+                }
+              ]
+            },
+            "description": "Bean validation failure showing safe fieldErrors."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 field validation",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"businessKey\": \"\",\n  \"scope\": \"\",\n  \"values\": {},\n  \"reason\": \"\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "features",
+                    ":feature",
+                    "records"
+                  ],
+                  "variable": [
+                    {
+                      "key": "feature",
+                      "value": "{{feature}}",
+                      "description": "Registered feature key"
+                    }
+                  ]
+                },
+                "description": "Bean validation failure showing safe fieldErrors."
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": 400,\n  \"code\": \"SYS-400-001\",\n  \"message\": \"Some input is invalid. Check the fields and date range, then try again.\",\n  \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\",\n  \"fieldErrors\": {\n    \"businessKey\": \"must not be blank\",\n    \"reason\": \"must not be blank\",\n    \"scope\": \"must not be blank\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Feature validation — WF-400-001",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessKey\": \"VALID-KEY\",\n  \"scope\": \"BULLION\",\n  \"values\": {\n    \"name\": \"Missing other required feature values\"\n  },\n  \"reason\": \"Feature validation example\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "features",
+                ":feature",
+                "records"
+              ],
+              "variable": [
+                {
+                  "key": "feature",
+                  "value": "{{feature}}",
+                  "description": "Registered feature key"
+                }
+              ]
+            },
+            "description": "Syntactically valid DTO that violates a feature-owned field definition."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"businessKey\": \"VALID-KEY\",\n  \"scope\": \"BULLION\",\n  \"values\": {\n    \"name\": \"Missing other required feature values\"\n  },\n  \"reason\": \"Feature validation example\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "features",
+                    ":feature",
+                    "records"
+                  ],
+                  "variable": [
+                    {
+                      "key": "feature",
+                      "value": "{{feature}}",
+                      "description": "Registered feature key"
+                    }
+                  ]
+                },
+                "description": "Syntactically valid DTO that violates a feature-owned field definition."
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": 400,\n  \"code\": \"WF-400-001\",\n  \"message\": \"The workflow request is invalid. Check the feature fields and try again.\",\n  \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\",\n  \"fieldErrors\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Audit query validation — AUD-400-001",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit?from=2026-09-10&to=2026-09-01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-09-10",
+                  "description": "Inclusive start date",
+                  "disabled": false
+                },
+                {
+                  "key": "to",
+                  "value": "2026-09-01",
+                  "description": "Inclusive end date",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Feature validation failure because from is after to."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/audit?from=2026-09-10&to=2026-09-01",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "audit"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "2026-09-10",
+                      "description": "Inclusive start date",
+                      "disabled": false
+                    },
+                    {
+                      "key": "to",
+                      "value": "2026-09-01",
+                      "description": "Inclusive end date",
+                      "disabled": false
+                    }
+                  ]
+                },
+                "description": "Feature validation failure because from is after to."
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": 400,\n  \"code\": \"AUD-400-001\",\n  \"message\": \"The audit search criteria are invalid. Check the filters and date range.\",\n  \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\",\n  \"fieldErrors\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Missing resource — AUD-404-001",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "audit",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{missingAuditId}}",
+                  "description": "Nonexistent audit ID"
+                }
+              ]
+            },
+            "description": "Feature-owned missing-resource response."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "404 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/audit/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "audit",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{missingAuditId}}",
+                      "description": "Nonexistent audit ID"
+                    }
+                  ]
+                },
+                "description": "Feature-owned missing-resource response."
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": 404,\n  \"code\": \"AUD-404-001\",\n  \"message\": \"The requested audit event is not available.\",\n  \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\",\n  \"fieldErrors\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Unknown endpoint — SYS-404-001",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/does-not-exist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "does-not-exist"
+              ]
+            },
+            "description": "Central handler response for an unmapped endpoint."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "404 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/does-not-exist",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "does-not-exist"
+                  ]
+                },
+                "description": "Central handler response for an unmapped endpoint."
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": 404,\n  \"code\": \"SYS-404-001\",\n  \"message\": \"The requested endpoint was not found.\",\n  \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\",\n  \"fieldErrors\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Unsupported method — SYS-405-001",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/features",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "features"
+              ]
+            },
+            "description": "POST is not mapped for the feature catalogue endpoint."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 405\", () => pm.response.to.have.status(405));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "405 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/features",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "features"
+                  ]
+                },
+                "description": "POST is not mapped for the feature catalogue endpoint."
+              },
+              "status": "Method Not Allowed",
+              "code": 405,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": 405,\n  \"code\": \"SYS-405-001\",\n  \"message\": \"The request method is not supported for this endpoint.\",\n  \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\",\n  \"fieldErrors\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Unsupported media type — SYS-415-001",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/xml",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "<record/>"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "features",
+                ":feature",
+                "records"
+              ],
+              "variable": [
+                {
+                  "key": "feature",
+                  "value": "{{feature}}",
+                  "description": "Registered feature key"
+                }
+              ]
+            },
+            "description": "Controller accepts JSON, not XML."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 415\", () => pm.response.to.have.status(415));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "415 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/xml",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "<record/>"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/features/:feature/records",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "features",
+                    ":feature",
+                    "records"
+                  ],
+                  "variable": [
+                    {
+                      "key": "feature",
+                      "value": "{{feature}}",
+                      "description": "Registered feature key"
+                    }
+                  ]
+                },
+                "description": "Controller accepts JSON, not XML."
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": 415,\n  \"code\": \"SYS-415-001\",\n  \"message\": \"The request content type is not supported.\",\n  \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\",\n  \"fieldErrors\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login as reviewer without administration permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{reviewerUsername}}",
+                  "description": "Demo user identifier",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{demoPassword}}",
+                  "description": "Secret environment value",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
+            },
+            "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Authentication response\", () => pm.expect(pm.response.json().authenticated).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/x-www-form-urlencoded",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "username",
+                      "value": "{{reviewerUsername}}",
+                      "description": "Demo user identifier",
+                      "type": "text"
+                    },
+                    {
+                      "key": "password",
+                      "value": "{{demoPassword}}",
+                      "description": "Secret environment value",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "login"
+                  ]
+                },
+                "description": "Spring Security login endpoint. Maintains the authenticated session in Postman's cookie jar."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"authenticated\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Forbidden action — IDN-403-001",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration"
+              ]
+            },
+            "description": "Reviewer is authenticated but lacks the administration permission."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "403 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/administration",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "administration"
+                  ]
+                },
+                "description": "Reviewer is authenticated but lacks the administration permission."
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": 403,\n  \"code\": \"IDN-403-001\",\n  \"message\": \"You are not authorised to perform this action.\",\n  \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\",\n  \"fieldErrors\": {}\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09 — Logout, authentication failure and internal contract",
+      "item": [
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "logout"
+              ]
+            },
+            "description": "Spring Security logout endpoint. Invalidates the authenticated session and writes logout audit evidence."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "204 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/logout",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "logout"
+                  ]
+                },
+                "description": "Spring Security logout endpoint. Invalidates the authenticated session and writes logout audit evidence."
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Get fresh anonymous CSRF token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/csrf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "csrf"
+              ]
+            },
+            "description": "Creates a fresh anonymous session after logout."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set(\"csrfHeader\", body.headerName);",
+                  "pm.collectionVariables.set(\"csrfToken\", body.token);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/csrf",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "csrf"
+                  ]
+                },
+                "description": "Creates a fresh anonymous session after logout."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"headerName\": \"X-CSRF-TOKEN\",\n  \"token\": \"example-token\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Invalid credentials — IDN-401-001",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "{{csrfHeader}}",
+                "value": "{{csrfToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{makerUsername}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{wrongPassword}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
+            },
+            "description": "Failed login response. Password and other credentials are never returned or stored as audit metadata."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "401 response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "{{csrfHeader}}",
+                    "value": "{{csrfToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/x-www-form-urlencoded",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "username",
+                      "value": "{{makerUsername}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "password",
+                      "value": "{{wrongPassword}}",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "login"
+                  ]
+                },
+                "description": "Failed login response. Password and other credentials are never returned or stored as audit metadata."
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": 401,\n  \"code\": \"IDN-401-001\",\n  \"message\": \"Authentication is required to access this resource.\",\n  \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\",\n  \"fieldErrors\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Unauthenticated protected request — IDN-401-001",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/session",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "session"
+              ]
+            },
+            "description": "Protected controller endpoint requested without an authenticated session."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "401 response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/session",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "session"
+                  ]
+                },
+                "description": "Protected controller endpoint requested without an authenticated session."
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": 401,\n  \"code\": \"IDN-401-001\",\n  \"message\": \"Authentication is required to access this resource.\",\n  \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\",\n  \"fieldErrors\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Internal error contract — saved example only, do not run",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/documentation/internal-error-example",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentation",
+                "internal-error-example"
+              ]
+            },
+            "description": "Documentation-only request holding the safe SYS-500-001 saved response. The production application deliberately has no endpoint that throws an internal exception. Deselect this request in Collection Runner."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 500\", () => pm.response.to.have.status(500));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "500 safe internal error",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/documentation/internal-error-example",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "documentation",
+                    "internal-error-example"
+                  ]
+                },
+                "description": "Documentation-only request holding the safe SYS-500-001 saved response. The production application deliberately has no endpoint that throws an internal exception. Deselect this request in Collection Runner."
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "X-Correlation-ID",
+                  "value": "42f7c2ee692afe818fa42f3a7715c220"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": 500,\n  \"code\": \"SYS-500-001\",\n  \"message\": \"We could not complete the request. Contact support with the trace reference.\",\n  \"traceId\": \"42f7c2ee692afe818fa42f3a7715c220\",\n  \"fieldErrors\": {}\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

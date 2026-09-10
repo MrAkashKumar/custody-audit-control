@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Custody Audit Control · Bullion Clearing</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <div id="login" class="login-shell">
+      <section class="login-intro">
+        <div class="brand">CAC <span>CUSTODY AUDIT CONTROL</span></div>
+        <p class="eyebrow">BULLION OPERATIONS</p>
+        <h1>Every change.<br />A clear record.</h1>
+        <p>
+          Controlled reference data, independent approvals and evidence you can
+          trace.
+        </p>
+        <div class="login-foot">STATIC DATA / APPROVALS / AUDIT EVIDENCE</div>
+      </section>
+      <section class="login-form">
+        <span class="eyebrow">SECURE WORKSPACE</span>
+        <h2>Sign in</h2>
+        <p class="muted">Use your assigned account to continue.</p>
+        <form id="sign-in">
+          <label
+            >Username<input
+              name="username"
+              autocomplete="username"
+              required
+              placeholder="Your username" /></label
+          ><label
+            >Password<input
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required /></label
+          ><button class="primary" type="submit">Sign in to workspace →</button>
+        </form>
+        <details>
+          <summary>Local demo accounts</summary>
+          <p>
+            Maker: <b>maker</b> · Checker: <b>checker</b><br />Other group:
+            <b>other</b><br />Default password: <b>CustodyDemo!2026</b>
+          </p>
+          <p class="muted">
+            Available only when the demo profile is enabled. A configured
+            password overrides this default.
+          </p>
+        </details>
+      </section>
+    </div>
+    <div id="workspace" hidden>
+      <aside>
+        <div class="brand">
+          CC <span>CUSTODY<br />CONTROL</span>
+        </div>
+        <div class="nav-label">WORKSPACE</div>
+        <nav id="main-nav">
+          <button data-page="audit">Audit trail</button
+          ><button data-page="approvals">
+            Pending approvals <span id="pending-count"></span></button
+          ><button data-page="reports">Reports & schedules</button>
+        </nav>
+        <div class="nav-label">STATIC DATA</div>
+        <nav id="feature-nav"></nav>
+        <div class="nav-label">ACCESS</div>
+        <nav>
+          <button data-page="admin" id="admin-nav">Users & groups</button>
+        </nav>
+        <div class="sidebar-bottom">
+          CONTROLLED WORKSPACE<br /><span>Independent approval required</span>
+        </div>
+      </aside>
+      <div class="application">
+        <header>
+          <div id="breadcrumb">Workspace / Audit trail</div>
+          <div class="identity">
+            <span id="who"></span
+            ><button id="sign-out" class="text-button">Sign out</button>
+          </div>
+        </header>
+        <main id="content" aria-live="polite"></main>
+        <footer>
+          Custody Audit Control
+          <span>All event times displayed in Singapore time · UTC+08:00</span>
+        </footer>
+      </div>
+    </div>
+    <div id="notice" role="status" hidden></div>
+    <dialog id="dialog">
+      <div class="dialog-head">
+        <h2 id="dialog-title"></h2>
+        <button id="close-dialog" aria-label="Close dialog">×</button>
+      </div>
+      <div id="dialog-body"></div>
+    </dialog>
+  </body>
+</html>

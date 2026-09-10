@@ -1,0 +1,8 @@
+
+============================================================
+                  CUSTODY AUDIT CONTROL
+           Audit Trail | Maker-Checker | Evidence
+============================================================
+ Spring Boot ${spring-boot.version}
+ Java 21 | Modular architecture | Secure reporting
+============================================================

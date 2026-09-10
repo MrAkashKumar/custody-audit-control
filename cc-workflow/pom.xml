@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.custody</groupId>
+    <artifactId>custody-audit-control</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>cc-workflow</artifactId>
+  <dependencies>
+    <dependency>
+      <groupId>com.custody</groupId>
+      <artifactId>cc-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.custody</groupId>
+      <artifactId>cc-identity</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+  </dependencies>
+</project>
